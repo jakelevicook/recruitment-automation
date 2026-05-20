@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}{{ shipment.id }} &middot; FreightAuto{% endblock %}
+{% block content %}
+<a href="/" class="back">&larr; back to dashboard</a>
+<section class="card">
+  <header class="shipment-head">
+    <div>
+      <h2>{{ shipment.id }}</h2>
+      <p class="muted">{{ shipment.request.origin.city }}, {{ shipment.request.origin.state }} &rarr; {{ shipment.request.destination.city }}, {{ shipment.request.destination.state }}</p>
+    </div>
+    <span class="status status-{{ shipment.status.value }}">{{ shipment.status.value }}</span>
+  </header>
+
+  {% if shipment.error %}
+    <div class="error">Error: {{ shipment.error }}</div>
+  {% endif %}
+
+  <div class="grid two">
+    <div>
+      <h3>Quotes</h3>
+      {% if not shipment.quotes %}<p class="muted">No quotes returned.</p>{% else %}
+      <table>
+        <thead><tr><th>Carrier</th><th>Service</th><th>Transit</th><th>Price</th><th></th></tr></thead>
+        <tbody>
+        {% for q in shipment.quotes %}
+          <tr {% if q.quote_id == shipment.selected_quote_id %}class="selected"{% endif %}>
+            <td>{{ q.carrier }}</td>
+            <td>{{ q.service_level.value }}</td>
+            <td>{{ q.transit_days }}d</td>
+            <td>${{ "%.2f"|format(q.price_usd) }}</td>
+            <td>{% if q.quote_id == shipment.selected_quote_id %}<strong>selected</strong>{% endif %}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
+    </div>
+
+    <div>
+      <h3>Booking</h3>
+      {% if shipment.booking %}
+        <dl>
+          <dt>Carrier</dt><dd>{{ shipment.booking.carrier }}</dd>
+          <dt>PRO #</dt><dd>{{ shipment.booking.pro_number }}</dd>
+          <dt>Pickup conf.</dt><dd>{{ shipment.booking.pickup_confirmation }}</dd>
+          <dt>Pickup</dt><dd>{{ shipment.booking.pickup_date.strftime("%Y-%m-%d") }}</dd>
+          <dt>ETA</dt><dd>{{ shipment.booking.estimated_delivery.strftime("%Y-%m-%d") }}</dd>
+          <dt>Docs</dt><dd>
+            <a href="{{ shipment.booking.label_url }}">label</a> &middot;
+            <a href="{{ shipment.booking.bol_url }}">BOL</a>
+          </dd>
+        </dl>
+      {% else %}
+        <p class="muted">Not booked yet.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <h3>Tracking</h3>
+  {% if not shipment.tracking %}
+    <p class="muted">No tracking events yet.</p>
+  {% else %}
+  <ol class="timeline">
+    {% for e in shipment.tracking %}
+      <li>
+        <time>{{ e.timestamp.strftime("%Y-%m-%d %H:%M") }}</time>
+        <strong>{{ e.status.value }}</strong>
+        {% if e.location %}<span class="muted">@ {{ e.location }}</span>{% endif %}
+        <div>{{ e.description }}</div>
+      </li>
+    {% endfor %}
+  </ol>
+  {% endif %}
+
+  <form method="post" action="/api/shipments/{{ shipment.id }}/track" onsubmit="event.preventDefault(); fetch(this.action, {method:'POST'}).then(()=>location.reload());">
+    <button type="submit">Refresh tracking</button>
+  </form>
+</section>
+{% endblock %}

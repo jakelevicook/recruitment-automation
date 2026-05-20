@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Dashboard &middot; FreightAuto{% endblock %}
+{% block content %}
+<section class="grid">
+  <div class="card">
+    <h2>Book a shipment</h2>
+    <p class="muted">Submit once. Quotes, carrier selection, booking, BOL and tracking happen automatically.</p>
+    <form method="post" action="/shipments" class="shipment-form">
+      <fieldset>
+        <legend>Origin</legend>
+        <div class="row">
+          <label>Contact <input name="origin_name" required></label>
+          <label>Company <input name="origin_company"></label>
+        </div>
+        <label>Street <input name="origin_street" required></label>
+        <div class="row">
+          <label>City <input name="origin_city" required></label>
+          <label class="state">State <input name="origin_state" maxlength="2" required></label>
+          <label class="zip">ZIP <input name="origin_zip" required pattern="[0-9]{5}"></label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Destination</legend>
+        <div class="row">
+          <label>Contact <input name="dest_name" required></label>
+          <label>Company <input name="dest_company"></label>
+        </div>
+        <label>Street <input name="dest_street" required></label>
+        <div class="row">
+          <label>City <input name="dest_city" required></label>
+          <label class="state">State <input name="dest_state" maxlength="2" required></label>
+          <label class="zip">ZIP <input name="dest_zip" required pattern="[0-9]{5}"></label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Freight</legend>
+        <label>Description <input name="item_description" required value="Palletized goods"></label>
+        <div class="row">
+          <label>Pieces <input type="number" name="pieces" min="1" value="1" required></label>
+          <label>Weight (lbs) <input type="number" step="0.1" name="weight_lbs" value="500" required></label>
+          <label>Class
+            <select name="freight_class">
+              {% for fc in freight_classes %}<option value="{{ fc }}" {% if fc == "70" %}selected{% endif %}>{{ fc }}</option>{% endfor %}
+            </select>
+          </label>
+        </div>
+        <div class="row">
+          <label>L (in) <input type="number" step="0.1" name="length_in" value="48" required></label>
+          <label>W (in) <input type="number" step="0.1" name="width_in" value="40" required></label>
+          <label>H (in) <input type="number" step="0.1" name="height_in" value="36" required></label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Service &amp; handling</legend>
+        <div class="row">
+          <label>Service
+            <select name="service_level">
+              {% for s in service_levels %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+            </select>
+          </label>
+          <label>Auto-select
+            <select name="selector">
+              <option value="best_value">best value</option>
+              <option value="cheapest">cheapest</option>
+              <option value="fastest">fastest</option>
+            </select>
+          </label>
+          <label>Reference <input name="reference" placeholder="PO# / customer ref"></label>
+        </div>
+        <div class="row checkboxes">
+          <label><input type="checkbox" name="liftgate_pickup" value="1"> liftgate pickup</label>
+          <label><input type="checkbox" name="liftgate_delivery" value="1"> liftgate delivery</label>
+          <label><input type="checkbox" name="residential_delivery" value="1"> residential delivery</label>
+          <label><input type="checkbox" name="hazmat" value="1"> hazmat</label>
+        </div>
+      </fieldset>
+
+      <button type="submit" class="primary">Automate shipment</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Recent shipments</h2>
+    {% if not shipments %}
+      <p class="muted">No shipments yet. Book one to get started.</p>
+    {% else %}
+    <table>
+      <thead><tr><th>ID</th><th>Route</th><th>Carrier</th><th>Price</th><th>Status</th></tr></thead>
+      <tbody>
+      {% for s in shipments %}
+        <tr>
+          <td><a href="/shipments/{{ s.id }}">{{ s.id }}</a></td>
+          <td>{{ s.request.origin.city }}, {{ s.request.origin.state }} &rarr; {{ s.request.destination.city }}, {{ s.request.destination.state }}</td>
+          <td>{{ s.selected_quote.carrier if s.selected_quote else "—" }}</td>
+          <td>{% if s.selected_quote %}${{ "%.2f"|format(s.selected_quote.price_usd) }}{% else %}—{% endif %}</td>
+          <td><span class="status status-{{ s.status.value }}">{{ s.status.value }}</span></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

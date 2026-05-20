@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>{% block title %}Freight Automation{% endblock %}</title>
+<link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+<header>
+  <div class="container">
+    <a class="brand" href="/">FreightAuto</a>
+    <span class="tagline">Fully automated LTL booking &middot; no office needed</span>
+  </div>
+</header>
+<main class="container">
+  {% block content %}{% endblock %}
+</main>
+<footer class="container">
+  <small>FreightAuto &middot; mock carriers: SwiftFreight, BlueLine LTL, RoadRunner Express</small>
+</footer>
+</body>
+</html>
